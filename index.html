@@ -93,7 +93,7 @@
       document.querySelector("#unity-loading-bar").style.display = "block";
 
       async function fetchBlobUrl(url) {
-        var r = await fetch(url);
+        var r = await fetch(url, { credentials: "omit", mode: "cors" });
         if (!r.ok) throw new Error("Download failed (" + r.status + ") for a game file.");
         return URL.createObjectURL(await r.blob());
       }
