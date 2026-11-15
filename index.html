@@ -116,7 +116,7 @@
             unityInstance.SetFullscreen(1);
           };
         } catch (message) {
-          unityShowBanner("Mystic failed to load: " + message, "error");
+         document.querySelector("#unity-loading-bar").style.display = "none"; document.querySelector("#unity-progress-bar-full").style.width = "0%"; unityShowBanner("Mystic could not load in this browser because WebGL is unavailable or the load failed. Please try a modern browser with WebGL enabled.", "error");
         }
       })();
     </script>
