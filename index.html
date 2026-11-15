@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Mystic — WebGL offline slice (2026-11-15)</title>
+    <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAwMCAO+ip1sAAAAASUVORK5CYII=">
+    <style>body { padding: 0; margin: 0 }
+#unity-container { position: absolute }
+#unity-container.unity-desktop { left: 50%; top: 50%; transform: translate(-50%, -50%) }
+#unity-container.unity-mobile { position: fixed; width: 100%; height: 100% }
+#unity-canvas { background: #1F1F20 }
+.unity-mobile #unity-canvas { width: 100%; height: 100% }
+#unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none }
+#unity-logo { width: 154px; height: 130px; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAwMCAO+ip1sAAAAASUVORK5CYII=') no-repeat center }
+#unity-progress-bar-empty { width: 141px; height: 18px; margin-top: 10px; margin-left: 6.5px; background: #444444 }
+#unity-progress-bar-full { width: 0%; height: 18px; margin-top: 10px; background: #ffffff }
+#unity-footer { position: relative }
+.unity-mobile #unity-footer { display: none }
+#unity-logo-title-footer { float:left; width: 102px; height: 38px; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAwMCAO+ip1sAAAAASUVORK5CYII=') no-repeat center }
+#unity-fullscreen-button { cursor:pointer; float: right; width: 38px; height: 38px; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAwMCAO+ip1sAAAAASUVORK5CYII=') no-repeat center }
+#unity-warning { position: absolute; left: 50%; top: 5%; transform: translate(-50%); background: white; padding: 10px; display: none }
+</style>
+  </head>
+  <body>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-logo-title-footer"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">Mystic</div>
+      </div>
+      <div style="font-family:arial;font-size:12px;color:#888;margin-top:6px">Mystic — WebGL offline slice · built 2026-11-15 · BUILD_PASS · 19 scenes · first load downloads ~210 MB · use the “Play offline — this device only” button in game</div>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var FILES = {
+        loader: "https://drive.usercontent.google.com/download?export=download&confirm=t&id=10ix_Ra_6zoDWFvdXciKY706PyneHGN9B",
+        framework: "https://drive.usercontent.google.com/download?export=download&confirm=t&id=1suKsQCGB8agt80CS1j32VwOUOq9uNKN3",
+        code: "https://drive.usercontent.google.com/download?export=download&confirm=t&id=1-o8ob4u8CqvqSKs_kSKmk3pVfEESJf6D",
+        data: "https://drive.usercontent.google.com/download?export=download&confirm=t&id=1qnbT9goTXRQ8dhyMHs_CB9sUNwLu_AM2"
+      };
+      var config = {
+        arguments: [],
+        dataUrl: FILES.data,
+        frameworkUrl: null,
+        codeUrl: FILES.code,
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Rosebud Studios",
+        productName: "Mystic",
+        productVersion: "0.1.0-slice",
+        showBanner: unityShowBanner,
+      };
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
+      } else {
+        canvas.style.width = "960px";
+        canvas.style.height = "600px";
+      }
+
+      document.querySelector("#unity-loading-bar").style.display = "block";
+
+      async function fetchBlobUrl(url) {
+        var r = await fetch(url);
+        if (!r.ok) throw new Error("Download failed (" + r.status + ") for a game file.");
+        return URL.createObjectURL(await r.blob());
+      }
+      async function loadScript(url) {
+        var s = document.createElement("script");
+        s.src = await fetchBlobUrl(url);
+        document.body.appendChild(s);
+        await new Promise((res, rej) => { s.onload = res; s.onerror = rej; });
+      }
+      (async () => {
+        try {
+          config.frameworkUrl = await fetchBlobUrl(FILES.framework);
+          await loadScript(FILES.loader);
+          var unityInstance = await createUnityInstance(canvas, config, (progress) => {
+            document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+          });
+          document.querySelector("#unity-loading-bar").style.display = "none";
+          document.querySelector("#unity-fullscreen-button").onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+        } catch (message) {
+          unityShowBanner("Mystic failed to load: " + message, "error");
+        }
+      })();
+    </script>
+  </body>
+</html>
